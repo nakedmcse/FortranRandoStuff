@@ -1,7 +1,7 @@
 program priority_queue_example
     implicit none
 
-    integer, parameter :: range = 100000
+    integer, parameter :: range = 1000000
     integer, dimension(:, :), allocatable :: simple_prio, simple_prio_2
     integer :: i, priority, value, count, count_start, count_end, rate
     real :: start_time, end_time, elapsed
