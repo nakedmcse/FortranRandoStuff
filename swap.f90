@@ -1,18 +1,26 @@
 ! Function returns multiple results
 program swapper
     implicit none
-    character(len=5), dimension(2) :: swapped
 
-    swapped = swap("hello","world")
-    print *, swapped(1), " ", swapped(2)
+    type values
+        character(:),allocatable :: left
+        character(:),allocatable :: right
+    end type values
+
+    type(values) :: swapped
+
+    swapped%left = "hello"
+    swapped%right = "world"
+    swapped = swap(swapped);
+    print *, swapped%left, " ", swapped%right
 
     contains
 
-        function swap(left, right) result (rightleft)
-            character(len=5), intent(in) :: left,right
-            character(len=5), dimension(2) :: rightleft
-            rightleft(1) = right
-            rightleft(2) = left
+        function swap(input) result (output)
+            type(values), intent(in) :: input
+            type(values) :: output
+            output%left = input%right
+            output%right = input%left
         end function swap
 
 end program swapper
