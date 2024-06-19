@@ -3,8 +3,10 @@ program for_collatz
     integer :: seed, steps
 
     do seed=0,1000000000
-        !print *, "Seed:", seed, "Steps:", collatz(seed)
         steps = collatz(seed)
+        if(mod(seed,1000000) == 0) then
+            print *, "Seed:", seed, "Steps:", collatz(seed)
+        end if
     end do
 
     contains
