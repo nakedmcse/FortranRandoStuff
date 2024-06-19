@@ -1,13 +1,17 @@
 program for_collatz
     implicit none
     integer :: seed, steps
+    real :: start_time, end_time
 
+    call cpu_time(start_time)
     do seed=0,1000000000
         steps = collatz(seed)
         if(mod(seed,1000000) == 0) then
-            print *, "Seed:", seed, "Steps:", collatz(seed)
+            print *, "Seed:", seed, "Steps:", steps
         end if
     end do
+    call cpu_time(end_time)
+    print *, "Collatz Completed in:", real(end_time - start_time)*1000
 
     contains
         function collatz(oseed) result (csteps)
