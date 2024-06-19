@@ -1,9 +1,10 @@
 program for_collatz
     implicit none
-    integer :: seed
+    integer :: seed, steps
 
     do seed=0,1000000000
-        print *, "Seed:", seed, "Steps:", collatz(seed)
+        !print *, "Seed:", seed, "Steps:", collatz(seed)
+        steps = collatz(seed)
     end do
 
     contains
