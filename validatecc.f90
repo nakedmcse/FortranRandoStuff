@@ -15,12 +15,7 @@ program validatecc
         do i = 1, len_trim(cardnumber)
             if (cardnumber(i:i) /= ' ') then
                 read(cardnumber(i:i),*) val
-                if (mod(i,2) == 0) then
-                    val = val * 2
-                    if (val > 9) then
-                        val = val - 9
-                    end if
-                end if
+                val = merge(merge((val * 2)-9, val * 2, val * 2 > 9), val, mod(i,2) == 0)
                 sum = sum + val
             end if
         end do
