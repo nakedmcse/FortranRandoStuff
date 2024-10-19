@@ -1,9 +1,10 @@
-program datagen
+program datagen_mt
+    use OMP_LIB
     implicit none
     character(len=100) :: line
     character(len=20), dimension(50000) :: weather_stations
     character(len=30), dimension(100000) :: chunk
-    integer :: i, c, ios, num_stations, rnd_choice, rnd_temp
+    integer :: i, j, c, ios, num_stations, rnd_choice, rnd_temp, chunk_start, chunk_end, thread_id
     integer :: output_lines = 100000000
     integer :: chunk_size = 100000
     real :: rnd, progress
@@ -23,16 +24,37 @@ program datagen
     close(10)
 
     ! Loop chunks
+    call OMP_SET_NUM_THREADS(4)
     print *, 'Generating Data'
     open(unit=20, file='output_data.csv', status='unknown', position='append', iostat=ios)
     do c = 1, output_lines/chunk_size
-        do i = 1, chunk_size
+        !$OMP PARALLEL SHARED(chunk, weather_stations) PRIVATE(rnd_choice, rnd_temp, rnd, chunk_start, chunk_end, thread_id, j)
+        thread_id = OMP_GET_THREAD_NUM()
+        select case (thread_id)
+            case (0)
+                chunk_start = 1
+                chunk_end = 25000
+            case (1)
+                chunk_start = 25001
+                chunk_end = 50000
+            case (2)
+                chunk_start = 50001
+                chunk_end = 75000
+            case (3)
+                chunk_start = 75001
+                chunk_end = 100000
+        end select
+
+        !$OMP DO
+        do j = chunk_start, chunk_end
             ! Add random weather station and temp to chunk
             call random_number(rnd)
             rnd_choice = int(rnd * num_stations) + 1
             rnd_temp = int(rnd * 200) - 100
-            chunk(i) = trim(weather_stations(rnd_choice)) // ';' // adjustl(itoa(rnd_temp))
+            chunk(j) = trim(weather_stations(rnd_choice)) // ';' // adjustl(itoa(rnd_temp))
         end do
+        !$OMP END DO
+        !$OMP END PARALLEL
         do i = 1, chunk_size, 4
             ! Write chunk
             write(20,'(A)') trim(chunk(i)) // new_line('A') // trim(chunk(i+1)) // new_line('A') &
@@ -67,4 +89,4 @@ program datagen
             end if
         end subroutine get_station
 
-end program datagen
+end program datagen_mt
