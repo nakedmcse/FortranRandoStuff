@@ -3,8 +3,8 @@ program datagen_mt
     implicit none
     character(len=100) :: line
     character(len=20), dimension(50000) :: weather_stations
-    character(len=30), dimension(100000) :: chunk
-    integer :: i, j, c, ios, num_stations, rnd_choice, rnd_temp, chunk_start, chunk_end, thread_id
+    integer, dimension(100000,2) :: chunk
+    integer :: i, j, c, ios, num_stations
     integer :: output_lines = 100000000
     integer :: chunk_size = 100000
     real :: rnd, progress
@@ -24,41 +24,22 @@ program datagen_mt
     close(10)
 
     ! Loop chunks
-    call OMP_SET_NUM_THREADS(4)
     print *, 'Generating Data'
     open(unit=20, file='output_data.csv', status='unknown', position='append', iostat=ios)
     do c = 1, output_lines/chunk_size
-        !$OMP PARALLEL SHARED(chunk, weather_stations) PRIVATE(rnd_choice, rnd_temp, rnd, chunk_start, chunk_end, thread_id, j)
-        thread_id = OMP_GET_THREAD_NUM()
-        select case (thread_id)
-            case (0)
-                chunk_start = 1
-                chunk_end = 25000
-            case (1)
-                chunk_start = 25001
-                chunk_end = 50000
-            case (2)
-                chunk_start = 50001
-                chunk_end = 75000
-            case (3)
-                chunk_start = 75001
-                chunk_end = 100000
-        end select
-
+        !$OMP PARALLEL SHARED(chunk) PRIVATE(j)
         !$OMP DO
-        do j = chunk_start, chunk_end
+        do j = 1, chunk_size
             ! Add random weather station and temp to chunk
             call random_number(rnd)
-            rnd_choice = int(rnd * num_stations) + 1
-            rnd_temp = int(rnd * 200) - 100
-            chunk(j) = trim(weather_stations(rnd_choice)) // ';' // adjustl(itoa(rnd_temp))
+            chunk(j,1) = int(rnd * num_stations) + 1
+            chunk(j,2) = int(rnd * 200) - 100
         end do
         !$OMP END DO
         !$OMP END PARALLEL
-        do i = 1, chunk_size, 4
+        do i = 1, chunk_size
             ! Write chunk
-            write(20,'(A)') trim(chunk(i)) // new_line('A') // trim(chunk(i+1)) // new_line('A') &
-                // trim(chunk(i+2)) // new_line('A') // trim(chunk(i+3))
+            write(20,'(A, A, I0)') trim(weather_stations(chunk(i,1))), ';', chunk(i,2)
         end do
         ! Update progress
         progress = (real(c)/real(output_lines/chunk_size)) * 100
@@ -69,12 +50,6 @@ program datagen_mt
     print *, 'Data Generated'
 
     contains
-
-        function itoa(i) result(res)
-            integer :: i
-            character(len=32) :: res
-            write(res, '(I0)') i
-        end function itoa
 
         subroutine get_station(line, name)
             character(len=*), intent(in) :: line
