@@ -2,9 +2,10 @@ program datagen_mt
     use OMP_LIB
     implicit none
     character(len=100) :: line
+    character(len=50) :: progress_bar
     character(len=20), dimension(50000) :: weather_stations
     integer, dimension(100000,2) :: chunk
-    integer :: i, j, c, ios, num_stations
+    integer :: i, j, c, ios, num_stations, bars
     integer :: output_lines = 100000000
     integer :: chunk_size = 100000
     real :: rnd, progress
@@ -25,6 +26,7 @@ program datagen_mt
 
     ! Loop chunks
     print *, 'Generating Data'
+    progress_bar = ''
     open(unit=20, file='output_data.csv', status='unknown', position='append', iostat=ios)
     do c = 1, output_lines/chunk_size
         !$OMP PARALLEL SHARED(chunk) PRIVATE(j)
@@ -43,7 +45,9 @@ program datagen_mt
         end do
         ! Update progress
         progress = (real(c)/real(output_lines/chunk_size)) * 100
-        write(*, '(A, A, I3, A)', advance='no') char(13), ' Progress: ', int(progress), '%'
+        bars = int(progress/2)
+        progress_bar = repeat('#', bars)
+        write(*, '(A, A, A, A, I3, A)', advance='no') char(13), ' Progress: [', progress_bar, '] ', int(progress), '%'
     end do
     close(20)
     print *
