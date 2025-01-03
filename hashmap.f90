@@ -22,7 +22,6 @@ program hashmap
     call ht_set(hashtable, "one", "one's value")
     call ht_set(hashtable, "two", "two's value")
     call ht_set(hashtable, "three", "three's value")
-    print *, "After set"
 
     ! Retrieve and print the values
     print *, "Key 'one': ", trim(ht_get(hashtable, "one"))
@@ -66,8 +65,9 @@ contains
         integer(kind=8) :: hash
         integer :: index, i
 
-        hash = hash_key(key)
+        hash = abs(hash_key(key))
         index = mod(hash, table%length) + 1 ! Ensure 1-based indexing
+        print *, index, hash
 
         do i = 1, table%length
             if (.not. table%entries(index)%is_occupied .or. table%entries(index)%key == key) then
@@ -96,7 +96,7 @@ contains
         integer(kind=8) :: hash
         integer :: index, i
 
-        hash = hash_key(key)
+        hash = abs(hash_key(key))
         index = mod(hash, table%length) + 1 ! Ensure 1-based indexing
 
         do i = 0, table%length - 1
