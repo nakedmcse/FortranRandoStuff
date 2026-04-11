@@ -4,7 +4,7 @@ program dynamic_generic_array
 
     type key_value
         character(len=:), allocatable :: key
-        integer :: value = 0
+        class(*), allocatable :: value
         logical :: error = .false.
     end type key_value
 
@@ -13,24 +13,38 @@ program dynamic_generic_array
         integer :: count = 0
     end type dyn_array
 
-    type(dyn_array) :: array
-    type(key_value) :: kv
+    type(dyn_array) :: array_int, array_str
+    type(key_value) :: kv_int, kv_str
     integer :: i
 
     do i = 1,10
-        kv%value = i
-        kv%key = itoa(i)
-        call append(array,kv)
+        kv_int%value = i
+        kv_int%key = itoa(i)
+        call append(array_int,kv_int)
+
+        kv_str%value = "string " // itoa(i)
+        kv_str%key = itoa(i)
+        call append(array_str,kv_str)
     end do
 
-    print *, 'KVs:'
-    print *, array%items(1)%key, array%items(1)%value
-    print *, array%items(5)%key, array%items(5)%value
-    print *, array%items(10)%key, array%items(10)%value
+    print *, 'Int KVs:'
+    print *, array_int%items(1)%key, unwrap_int(array_int%items(1)%value)
+    print *, array_int%items(5)%key, unwrap_int(array_int%items(5)%value)
+    print *, array_int%items(10)%key, unwrap_int(array_int%items(10)%value)
 
-    kv = pop(array)
-    print *, 'Popped:'
-    print *, kv%key, kv%value, kv%error
+    kv_int = pop(array_int)
+    print *, 'Int Popped:'
+    print *, kv_int%key, unwrap_int(kv_int%value), kv_int%error
+    print *,''
+
+    print *, 'Str KVs:'
+    print *, array_str%items(1)%key, "           ", unwrap_str(array_str%items(1)%value)
+    print *, array_str%items(5)%key, "           ", unwrap_str(array_str%items(5)%value)
+    print *, array_str%items(10)%key, "          ", unwrap_str(array_str%items(10)%value)
+
+    kv_str = pop(array_str)
+    print *, 'Str Popped:'
+    print *, kv_str%key, "          ", unwrap_str(kv_str%value), kv_str%error
 
     contains
 
@@ -71,5 +85,27 @@ program dynamic_generic_array
             write(tmp, '(I0)') i
             res = trim(tmp)
         end function itoa
+
+        function unwrap_int(value) result (res)
+            integer :: res
+            class(*) :: value
+            select type(v => value)
+                type is (integer)
+                    res = v
+                class default
+                    res = -1
+            end select
+        end function unwrap_int
+
+        function unwrap_str(value) result (res)
+            character(len=:), allocatable :: res
+            class(*) :: value
+            select type(v => value)
+            type is (character(*))
+                res = v
+            class default
+                res = "unknown"
+            end select
+        end function unwrap_str
 
 end program dynamic_generic_array
